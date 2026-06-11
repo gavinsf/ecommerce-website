@@ -17,7 +17,7 @@ class User(Base):
     id            = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email         = Column(String, primary_key=True, nullable=False)
     hash          = Column(String, nullable=False)
-    created_at    = Column(DateTime, default=datetime.now)
+    created_at    = Column(DateTime, default=datetime.datetime.now)
 
 class Product(Base):
     __tablename__ = "products"
@@ -25,7 +25,7 @@ class Product(Base):
     name          = Column(String, nullable=False)
     cost_price    = Column(Float, nullable=False)
     sell_price    = Column(Float, nullable=False)
-    created_at    = Column(DateTime, default=datetime.now)
+    created_at    = Column(DateTime, default=datetime.datetime.now)
 
 class Order(Base):
     __tablename__ = "orders"
@@ -33,7 +33,7 @@ class Order(Base):
     user_id       = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     status        = Column(Enum(OrderStatus), default=OrderStatus.pending)
     total         = Column(Float)
-    created_at    = Column(DateTime, default=datetime.now)
+    created_at    = Column(DateTime, default=datetime.datetime.now)
 
 class OrderItem(Base):
     __tablename__ = "order_items"

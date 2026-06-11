@@ -22,6 +22,10 @@ class User(Base):
 class Product(Base):
     __tablename__ = "products"
     id            = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name          = Column(String, nullable=False)
+    cost_price    = Column(Float, nullable=False)
+    sell_price    = Column(Float, nullable=False)
+    created_at    = Column(DateTime, default=datetime.now)
 
 class Order(Base):
     __tablename__ = "orders"

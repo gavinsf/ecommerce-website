@@ -1,14 +1,30 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.dependencies import get_db
 from app.models import Product
 from app.schemas import ProductCreate
 from uuid import UUID
+from sqlalchemy import select
 
 router = APIRouter(
     prefix="/products",
     tags=["products"])
 
 
+# TODO : Require admin
+@router.get("/")
+async def list_products(offset: int = Query(0, ge=0),
+    limit: int = Query(20, le=50),
+    db=Depends(get_db)):
+    result = await db.execute(
+        select(Product).offset(offset).limit(limit)
+    )
+    
+    products = result.scalars().all()    
+
+    if not products:
+        return {"Error" : "Products not found"}
+
+    return products
 
 
 # TODO : Require admin

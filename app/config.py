@@ -8,7 +8,7 @@ def get_jwt_secret():
     secret_name = os.getenv("AWS_SECRET_NAME")
     region = os.getenv("AWS_REGION")
 
-    client = boto3.client(service_name="secrets_manager", region_name=region)
+    client = boto3.client(service_name="secretsmanager", region_name=region)
     try:
         response = client.get_secret_value(SecretId=secret_name)
         return response["SecretString"]

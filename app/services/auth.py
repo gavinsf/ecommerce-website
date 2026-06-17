@@ -33,4 +33,4 @@ def decode_token(token: str):
     try:
         return jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
     except JWTError:
-        raise HTTPException(401, "Invalid or expired token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")

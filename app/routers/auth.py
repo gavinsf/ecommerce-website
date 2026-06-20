@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from app.schemas import AuthResponse, UserCreate, UserResponse, TokenResponse
+from app.schemas import AuthResponse, UserCreate, UserResponse, TokenResponse, UserLogin
 from app.dependencies import get_db
 from app.models import User
-from app.services.auth import hash_pwd, create_access_token, create_refresh_token
+from app.services.auth import hash_pwd, create_access_token, create_refresh_token, verify_pwd
 from sqlalchemy import select
 import traceback
+from app.config import settings
 
 router = APIRouter(tags=["auth"])
 
@@ -32,13 +33,36 @@ async def register(payload: UserCreate = Body(...), db=Depends(get_db)):
             tokens = _issue_tokens(new_user)
         )
     except Exception as e:
-        print("\n=== CRITICAL API CRASH TRACEBACK ===")
         traceback.print_exc()
-        print("====================================\n")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/login", response_model=AuthResponse)
+async def login(payload: UserLogin = Body(...), db=Depends(get_db)):
+    try:
+        sel = select(User).where(User.email == payload.email)
+        res = await db.execute(sel)
+        user = res.scalars().first()
+
+        if not user or not verify_pwd(payload.password, user.hash):
+            raise HTTPException(status_code=401)
+
+        return AuthResponse(
+            user=UserResponse.model_validate(user),
+            tokens=_issue_tokens(user),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 def _issue_tokens(user):
+    groups = ["admin"] if user.is_admin == 1 else ["user"]
+
     return TokenResponse(
-        access_token = create_access_token(user.id, user.groups),
-        refresh_token = create_refresh_token(user.id)
+        access_token = create_access_token(user.id, groups),
+        refresh_token = create_refresh_token(user.id),
+        expires_in = settings.ACCESS_TOKEN_EXPIRE
     )

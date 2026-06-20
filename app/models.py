@@ -18,6 +18,7 @@ class User(Base):
     email         = Column(String, unique=True, nullable=False)
     hash          = Column(String, nullable=False)
     created_at    = Column(DateTime, default=datetime.datetime.now)
+    is_admin      = Column(Integer, default=0, nullable=False)
 
 class Product(Base):
     __tablename__ = "products"

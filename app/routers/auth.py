@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from app.schemas import AuthResponse, UserCreate, UserResponse, TokenResponse, UserLogin
+from app.schemas import AuthResponse, UserCreate, UserResponse, TokenResponse, UserLogin, RefreshRequest
 from app.dependencies import get_db
 from app.models import User
-from app.services.auth import hash_pwd, create_access_token, create_refresh_token, verify_pwd
+from app.services.auth import hash_pwd, create_access_token, create_refresh_token, verify_pwd, decode_token
 from sqlalchemy import select
 import traceback
 from app.config import settings
@@ -57,6 +57,16 @@ async def login(payload: UserLogin = Body(...), db=Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(payload: RefreshRequest, db=Depends(get_db)):
+    claims = decode_token(payload.refresh_token)
+    if claims["type"] != "refresh":
+        raise HTTPException(status_code=401, detail="Token type isn't refresh")
+
+    sel = select(User).where(User.email == claims["sub"])
+    res = await db.execute(sel)
+    user = res.scalars().first()
+    return _issue_tokens(user)
 
 def _issue_tokens(user):
     groups = ["admin"] if user.is_admin == 1 else ["user"]

@@ -32,3 +32,6 @@ class UserResponse(BaseModel):
 class AuthResponse(BaseModel):
     user    : UserResponse
     tokens  : TokenResponse
+
+class RefreshRequest(BaseModel):
+    refresh_token : str

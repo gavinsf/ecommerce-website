@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
 import boto3
+import json
 
 load_dotenv()
 
@@ -11,7 +12,9 @@ def get_jwt_secret():
     client = boto3.client(service_name="secretsmanager", region_name=region)
     try:
         response = client.get_secret_value(SecretId=secret_name)
-        return response["SecretString"]
+        secret_string = response["SecretString"]
+        secret_dict = json.loads(secret_string)
+        return secret_dict[os.getenv("SECRET_KEY_NAME")]
     except Exception as e:
         print("Error : Failed to retrieve JWT secret")
         raise e

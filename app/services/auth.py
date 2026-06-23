@@ -32,5 +32,6 @@ def create_refresh_token(user_id: uuid.UUID):
 def decode_token(token: str):
     try:
         return jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-    except JWTError:
+    except JWTError as e:
+        print("JWT ERROR:", type(e).__name__, str(e))
         raise HTTPException(status_code=401, detail="Invalid or expired token")

@@ -41,7 +41,6 @@ async def get_product(id: UUID, db=Depends(get_db)):
     return product
 
 
-# TODO : Require admin
 @router.post("/", dependencies=[Depends(require_admin)])
 async def create_product(prod: ProductCreate, db=Depends(get_db)):
     product = Product(**prod.model_dump())
@@ -51,8 +50,7 @@ async def create_product(prod: ProductCreate, db=Depends(get_db)):
     return product
 
 
-# TODO : Require admin
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(require_admin)])
 async def delete_product(id: UUID, db=Depends(get_db)):
     product = await db.get(Product, id)
 

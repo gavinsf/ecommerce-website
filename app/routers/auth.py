@@ -63,7 +63,7 @@ async def refresh_token(payload: RefreshRequest, db=Depends(get_db)):
     if claims["type"] != "refresh":
         raise HTTPException(status_code=401, detail="Token type isn't refresh")
 
-    sel = select(User).where(User.email == claims["sub"])
+    sel = select(User).where(User.id == claims["sub"])
     res = await db.execute(sel)
     user = res.scalars().first()
     return _issue_tokens(user)

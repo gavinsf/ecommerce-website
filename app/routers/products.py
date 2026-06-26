@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from app.dependencies import get_db, require_admin
 from app.models import Product
-from app.schemas import ProductCreate
+from app.schemas.products import ProductCreate
 from uuid import UUID
 from sqlalchemy import select
 
@@ -10,7 +10,6 @@ router = APIRouter(
     tags=["products"])
 
 
-# TODO : Require admin
 @router.get("/")
 async def list_products(offset: int = Query(0, ge=0),
     limit: int = Query(20, le=50),
@@ -27,7 +26,6 @@ async def list_products(offset: int = Query(0, ge=0),
     return products
 
 
-# TODO : Require admin
 @router.get("/{id}")
 async def get_product(id: UUID, db=Depends(get_db)):
     product = await db.get(Product, id)

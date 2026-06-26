@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from app.schemas import AuthResponse, UserCreate, UserResponse, TokenResponse, UserLogin, RefreshRequest
+from app.schemas.auth import AuthResponse, UserCreate, UserResponse, TokenResponse, UserLogin, RefreshRequest
 from app.dependencies import get_db
 from app.models import User
 from app.services.auth import hash_pwd, create_access_token, create_refresh_token, verify_pwd, decode_token

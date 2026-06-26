@@ -1,4 +1,4 @@
-from app.schemas.cart import CartItemResponse, CartResponse, CartItemAdd
+from app.schemas.cart import CartItemResponse, CartResponse, CartItemAdd, CartItemUpdate
 from fastapi import APIRouter, Depends, HTTPException
 from app.dependencies import get_db, get_current_user
 from app.models import Product, CartItem
@@ -40,7 +40,7 @@ async def add_item_cart(payload: CartItemAdd,
     return CartItemResponse(
         product_id = payload.id,
         quantity = payload.quantity,
-        price = prod.sell_price * payload.quantity,
+        price = round(prod.sell_price * payload.quantity, 2),
         name = prod.name
     )
 
@@ -59,3 +59,27 @@ async def delete_item_cart(id, db=Depends(get_db), user=Depends(get_current_user
     db.delete(item)
     db.commit()
     return {"Deleted" : id}
+
+@router.post("/item/{id}", response_model=CartItemResponse)
+async def update_item_cart(id, payload=CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
+    sel = select(CartItem, Product).join(Product).where(
+        CartItem.product_id==id,
+        CartItem.user_id==user
+    )
+    res = await db.execute(sel)
+    row = res.scalars().first()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Cart item not found")
+    
+    item, prod = row
+    item.quantity = payload.quantity
+
+    await db.commit()
+
+    return CartItemResponse(
+        product_id = payload.id,
+        quantity = payload.quantity,
+        price = round(prod.sell_price * payload.quantity, 2),
+        name = prod.name
+    )

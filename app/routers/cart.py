@@ -43,3 +43,19 @@ async def add_item_cart(payload: CartItemAdd,
         price = prod.sell_price * payload.quantity,
         name = prod.name
     )
+
+@router.delete("/item/{id}")
+async def delete_item_cart(id, db=Depends(get_db), user=Depends(get_current_user)):
+    sel = select(CartItem).where(
+        CartItem.product_id==id,
+        CartItem.user_id==user
+    )
+    res = await db.execute(sel)
+    item = res.scalars().first()
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Cart item not found")
+    
+    db.delete(item)
+    db.commit()
+    return {"Deleted" : id}

@@ -8,8 +8,26 @@ router = APIRouter(
     prefix="/cart",
     tags=["cart"])
 
+@router.get("/", response_model=CartResponse)
+async def get_cart(db=Depends(get_db), user=Depends(get_current_user)):
+    sel = select(CartItem, Product).join(Product).where(
+        CartItem.user_id == user.id
+    )
+    res = await db.execute(sel)
+    rows = res.scalars().all()
+
+    items = []
+    for ci, prod in rows:
+        items.append(CartItemResponse(
+            id=ci.id, product_id=prod.id, quantity=ci.quantity,
+            sell_price=prod.sell_price, name=prod.name,
+            total=round(prod.sell_price*ci.quantity, 2)
+        ))
+    total = round(sum(i.total for i in items), 2)
+    return CartResponse(items=items, total=total)
+
 @router.post("/items", response_model=CartItemResponse)
-async def add_item_cart(payload: CartItemAdd,
+async def add_item(payload: CartItemAdd,
     db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(Product).where(Product.id == payload.product_id)
     res = await db.execute(sel)
@@ -45,7 +63,7 @@ async def add_item_cart(payload: CartItemAdd,
     )
 
 @router.delete("/item/{id}")
-async def delete_item_cart(id, db=Depends(get_db), user=Depends(get_current_user)):
+async def delete_item(id, db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(CartItem).where(
         CartItem.product_id==id,
         CartItem.user_id==user
@@ -61,7 +79,7 @@ async def delete_item_cart(id, db=Depends(get_db), user=Depends(get_current_user
     return {"Deleted" : id}
 
 @router.post("/item/{id}", response_model=CartItemResponse)
-async def update_item_cart(id, payload=CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
+async def update_item(id, payload=CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(CartItem, Product).join(Product).where(
         CartItem.product_id==id,
         CartItem.user_id==user

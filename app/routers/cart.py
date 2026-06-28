@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.dependencies import get_db, get_current_user
 from app.models import Product, CartItem
 from sqlalchemy import select
+from uuid import UUID
 
 router = APIRouter(
     prefix="/cart",
@@ -69,7 +70,7 @@ async def add_item(payload: CartItemAdd,
     )
 
 @router.delete("/item/{prod_id}")
-async def delete_item(prod_id, db=Depends(get_db), user=Depends(get_current_user)):
+async def delete_item(prod_id: UUID, db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(CartItem).where(
         CartItem.product_id==prod_id,
         CartItem.user_id==user.id
@@ -85,7 +86,7 @@ async def delete_item(prod_id, db=Depends(get_db), user=Depends(get_current_user
     return {"Deleted" : prod_id}
 
 @router.post("/item/{prod_id}", response_model=CartItemResponse)
-async def update_item(prod_id, payload: CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
+async def update_item(prod_id: UUID, payload: CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(CartItem, Product).join(Product).where(
         CartItem.product_id==prod_id,
         CartItem.user_id==user.id

@@ -5,11 +5,16 @@ class CartItemAdd(BaseModel):
     product_id     : uuid.UUID
     quantity       : int = Field(gt=0, default=1)
 
+class CartItemUpdate(BaseModel):
+    quantity      : int = Field(gt=0, default=1)
+
 class CartItemResponse(BaseModel):
-    product_id     : uuid.UUID
-    quantity       : int
-    price          : float
-    name           : str
+    id:         uuid.UUID
+    product_id: uuid.UUID
+    name:       str
+    quantity:   int
+    sell_price: float
+    line_total: float
 
 class CartResponse(BaseModel):
     items : list[CartItemResponse]

@@ -14,16 +14,16 @@ async def get_cart(db=Depends(get_db), user=Depends(get_current_user)):
         CartItem.user_id == user.id
     )
     res = await db.execute(sel)
-    rows = res.scalars().all()
+    rows = res.all()
 
     items = []
     for ci, prod in rows:
         items.append(CartItemResponse(
             id=ci.id, product_id=prod.id, quantity=ci.quantity,
             sell_price=prod.sell_price, name=prod.name,
-            total=round(prod.sell_price*ci.quantity, 2)
+            line_total=round(prod.sell_price*ci.quantity, 2)
         ))
-    total = round(sum(i.total for i in items), 2)
+    total = round(sum(i.line_total for i in items), 2)
     return CartResponse(items=items, total=total)
 
 @router.post("/items", response_model=CartItemResponse)
@@ -50,23 +50,29 @@ async def add_item(payload: CartItemAdd,
         existing.quantity += payload.quantity
         item = existing
     else:
-        item = CartItem(id = user.id, product_id = payload.product_id, quantity = payload.quantity)
+        item = CartItem(
+            user_id = user.id,
+            product_id = payload.product_id,
+            quantity = payload.quantity,
+            )
         db.add(item)
     await db.commit()
     await db.refresh(item)
 
     return CartItemResponse(
-        product_id = payload.id,
+        id = item.id,
+        product_id = payload.product_id,
+        name = prod.name,
         quantity = payload.quantity,
-        price = round(prod.sell_price * payload.quantity, 2),
-        name = prod.name
+        sell_price = round(prod.sell_price, 2),
+        line_total = round(prod.sell_price * payload.quantity, 2),
     )
 
-@router.delete("/item/{id}")
-async def delete_item(id, db=Depends(get_db), user=Depends(get_current_user)):
+@router.delete("/item/{prod_id}")
+async def delete_item(prod_id, db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(CartItem).where(
-        CartItem.product_id==id,
-        CartItem.user_id==user
+        CartItem.product_id==prod_id,
+        CartItem.user_id==user.id
     )
     res = await db.execute(sel)
     item = res.scalars().first()
@@ -74,32 +80,34 @@ async def delete_item(id, db=Depends(get_db), user=Depends(get_current_user)):
     if not item:
         raise HTTPException(status_code=404, detail="Cart item not found")
     
-    db.delete(item)
-    db.commit()
-    return {"Deleted" : id}
+    await db.delete(item)
+    await db.commit()
+    return {"Deleted" : prod_id}
 
-@router.post("/item/{id}", response_model=CartItemResponse)
-async def update_item(id, payload=CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
+@router.post("/item/{prod_id}", response_model=CartItemResponse)
+async def update_item(prod_id, payload: CartItemUpdate, db=Depends(get_db), user=Depends(get_current_user)):
     sel = select(CartItem, Product).join(Product).where(
-        CartItem.product_id==id,
-        CartItem.user_id==user
+        CartItem.product_id==prod_id,
+        CartItem.user_id==user.id
     )
     res = await db.execute(sel)
-    row = res.scalars().first()
+    row = res.first()
 
     if not row:
         raise HTTPException(status_code=404, detail="Cart item not found")
     
-    item, prod = row
-    item.quantity = payload.quantity
+    cart_item, prod = row
+    cart_item.quantity = payload.quantity
 
     await db.commit()
 
     return CartItemResponse(
-        product_id = payload.id,
+        id = cart_item.id,
+        product_id = prod_id,
         quantity = payload.quantity,
-        price = round(prod.sell_price * payload.quantity, 2),
-        name = prod.name
+        sell_price = round(prod.sell_price, 2),
+        name = prod.name,
+        line_total = round(prod.sell_price * payload.quantity, 2),
     )
 
 @router.delete("/")
@@ -112,7 +120,7 @@ async def clear_cart(db=Depends(get_db), user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Cart not found")
     
     for item in items:
-        db.delete(item)
+        await db.delete(item)
     await db.commit()
 
     return {"Detail" : "Cart cleared"}

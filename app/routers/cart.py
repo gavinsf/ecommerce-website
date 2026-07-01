@@ -1,8 +1,6 @@
 from app.schemas.cart import CartItemResponse, CartResponse, CartItemAdd, CartItemUpdate
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from app.dependencies import get_db, get_current_user
-from app.models import Product, CartItem
-from sqlalchemy import select
 from uuid import UUID
 from app.services import cart as cart_service
 

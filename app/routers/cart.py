@@ -57,15 +57,5 @@ async def update_item(prod_id: UUID, payload: CartItemUpdate, db=Depends(get_db)
 
 @router.delete("/")
 async def clear_cart(db=Depends(get_db), user=Depends(get_current_user)):
-    sel = select(CartItem).where(CartItem.user_id==user.id)
-    res = await db.execute(sel)
-    items = res.scalars().all()
-
-    if not items:
-        raise HTTPException(status_code=404, detail="Cart not found")
-    
-    for item in items:
-        await db.delete(item)
-    await db.commit()
-
+    await cart_service.clear_cart(db, user.id)
     return {"Detail" : "Cart cleared"}

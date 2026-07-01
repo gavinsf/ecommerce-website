@@ -71,4 +71,4 @@ async def clear_cart(db, user_id):
     if not cart_items:
         raise HTTPException(status_code=404, detail="Cart not found")
     
-    await cart_repo.delete_list(cart_items)
+    await cart_repo.delete_list(db, cart_items)

@@ -52,6 +52,7 @@ async def commit(db):
 
 
 async def delete_list(db, items: list[CartItem]):
-    for item in items:
+    for row in items:
+        item = row[0]
         await db.delete(item)
     await db.commit()

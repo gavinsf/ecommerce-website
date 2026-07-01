@@ -28,6 +28,7 @@ class Product(Base):
     sell_price    = Column(Float, nullable=False)
     created_at    = Column(DateTime, default=datetime.datetime.now)
     is_deleted    = Column(Integer, default=0)
+    stock         = Column(Integer, default=0)
 
 class Order(Base):
     __tablename__ = "orders"

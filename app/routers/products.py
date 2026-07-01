@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 from app.dependencies import get_db, require_admin
-from app.models import Product
 from app.schemas.products import ProductCreate
 from uuid import UUID
-from sqlalchemy import select
+from app.services import products as prod_service
 
 router = APIRouter(
     prefix="/products",
@@ -12,51 +11,21 @@ router = APIRouter(
 
 @router.get("/")
 async def list_products(offset: int = Query(0, ge=0),
-    limit: int = Query(20, le=50),
-    db=Depends(get_db)):
-    result = await db.execute(
-        select(Product).offset(offset).limit(limit)
-    )
-    
-    products = result.scalars().all()    
-
-    if not products:
-        return {"Error" : "Products not found"}
-
-    return products
+    limit: int = Query(20, le=50), db=Depends(get_db)):
+    return await prod_service.list_products(db, offset, limit)
 
 
 @router.get("/{id}")
-async def get_product(id: UUID, db=Depends(get_db)):
-    product = await db.get(Product, id)
-
-    if not product:
-        return {"error" : "Product not found"}
-    
-    if product.is_deleted == 1:
-        return {"log" : "Product already deleted"}
-    
-    return product
+async def get_product(id: UUID, db=Depends(get_db)):    
+    return await prod_service.get_product(db, id)
 
 
 @router.post("/", dependencies=[Depends(require_admin)])
 async def create_product(prod: ProductCreate, db=Depends(get_db)):
-    product = Product(**prod.model_dump())
-    db.add(product)
-    await db.commit()
-    await db.refresh(product)
-    return product
+    return await prod_service.create_product(db, prod)
 
 
 @router.delete("/{id}", dependencies=[Depends(require_admin)])
 async def delete_product(id: UUID, db=Depends(get_db)):
-    product = await db.get(Product, id)
-
-    if not product:
-        return {"error" : "Product not found"}
-    
-    product.is_deleted = 1
-
-    await db.commit()
-
+    await prod_service.soft_delete_product(db, id)
     return {"log" : f"soft deleted {id}"}

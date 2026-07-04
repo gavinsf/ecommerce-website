@@ -1,13 +1,14 @@
-# Ecommerce Backend
+# Ecommerce Website
 
-## General Features:
+### General Features:
 - Product
 - Authentication
 - Orders
 - Cart
 
-## Technologies and Libraries:
+### Technologies and Libraries:
 - FastAPI
+- React
 - Docker
 - Deployed on EC2 instance
 - Alembic

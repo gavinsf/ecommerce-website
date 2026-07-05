@@ -10,7 +10,12 @@ async def list_products(db, offset: int, limit: int) -> Product:
     if not prods:
         raise HTTPException(status_code=404, detail="Products not found")
     return prods
-    
+
+async def search_products_by_name(db, name: str, offset: int, limit: int) -> Product:
+    prods = await prod_repo.products_like_name(db, name, offset, limit)
+    if not prods:
+        raise HTTPException(status_code=404, detail="Products not found")
+    return prods
 
 async def get_product(db, prod_id: UUID):
     product = await prod_repo.get_product(db, prod_id)

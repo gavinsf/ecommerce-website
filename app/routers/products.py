@@ -3,6 +3,7 @@ from app.dependencies import get_db, require_admin
 from app.schemas.products import ProductCreate
 from uuid import UUID
 from app.services import products as prod_service
+from typing import Optional
 
 router = APIRouter(
     prefix="/products",
@@ -10,8 +11,10 @@ router = APIRouter(
 
 
 @router.get("/")
-async def list_products(offset: int = Query(0, ge=0),
+async def get_products(name: Optional[str] = None, offset: int = Query(0, ge=0),
     limit: int = Query(20, le=50), db=Depends(get_db)):
+    if name:
+        return await prod_service.search_products_by_name(db, name, offset, limit,)
     return await prod_service.list_products(db, offset, limit)
 
 

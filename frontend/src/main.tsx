@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import RootLayout from './layouts/root_layout';
-import Home from './pages/home';
+import Search, { searchLoader } from './pages/search';
 
 
 const router = createBrowserRouter([
@@ -13,9 +13,10 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <Home />,
-      },
+        path: "search",
+        element: <Search />,
+        loader: searchLoader,
+      }
     ],
   },
 ]);

@@ -80,3 +80,31 @@ async def test_list_product(db_session):
     prod_list = await prod_repo.get_product_list(db_session, 0, 5)
 
     assert len(prod_list) == 3
+
+@pytest.mark.asyncio
+async def test_products_like_name(db_session):
+    name = "Test"
+    cost_price = 2.00
+    sell_price = 3.00
+    test_product = ProductCreate(
+        name = name,
+        cost_price = cost_price,
+        sell_price = sell_price
+    )
+
+    await prod_repo.create_product(db_session, test_product)
+
+    prod = await prod_repo.products_like_name(db_session, name, 0, 5)
+    assert prod is not None
+
+    test_name = "stand"
+    prod = await prod_repo.products_like_name(db_session, test_name, 0, 5)
+    assert prod is not None
+    
+    test_name = "no"
+    prod = await prod_repo.products_like_name(db_session, test_name, 0, 5)
+    assert prod == []
+
+    test_name = ""
+    prod = await prod_repo.products_like_name(db_session, test_name, 0, 5)
+    assert prod is not None
